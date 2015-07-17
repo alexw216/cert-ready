@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ "$#" -ne 3 ]; then
+    echo "You must enter exactly 3 command line arguments"
+    echo "[Usage: $0 SSL-private-key SSL-scr SSL-DER-format-certicifate]"
+exit
+fi
+modulus1=`openssl rsa -noout -modulus -in $1 | openssl md5 | awk '{print $2}'`
+modulus2=`openssl req -noout -modulus -in $2 | openssl md5 | awk '{print $2}'`
+modulus3=`openssl x509 -noout -modulus -in $3 | openssl md5 | awk '{print $2}'`
+
+
+
+if [ $modulus1 == $modulus2 -a  $modulus2 == $modulus3 -a $modulus3 == $modulus1 ]; then
+echo "Converting SSL private key to RSA PEM format."
+openssl rsa -in $1 -outform PEM -out $1.pem
+echo "converting SSL certificate to PEM Format"
+openssl x509 -in $3 -out $3.pem -outform PEM
+echo "SSL certicates are good and ready for deployment."
+echo "Please use $1.pem and $3.pem files to deploy SSL certificates to web servers or layer 4."
+
+else 
+echo "SSL certificate moduluses are not the same, please double check the SSL certificate files to see if they are correct"
+fi
